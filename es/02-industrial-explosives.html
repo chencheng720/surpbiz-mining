@@ -2796,7 +2796,9 @@ if(PAGE && PAGE.pagenav){
     var isEs = path.indexOf('/es/') >= 0;
     var a = document.createElement('a');
     a.className = 'nav-lang';
-    a.href = isEs ? file : ('/es/' + file);
+    // FIX: use absolute URL via location.origin
+    // (avoids the relative-path bug where /es/index.html → /es/index.html self-loop)
+    a.href = (location.origin || '') + (isEs ? '/' : '/es/') + file;
     a.lang = isEs ? 'en' : 'es';
     a.textContent = isEs ? 'EN' : 'ES';
     a.title = isEs ? 'English' : 'Español';
