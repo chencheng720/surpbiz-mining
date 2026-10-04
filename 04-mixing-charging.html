@@ -2333,7 +2333,6 @@ const allProducts = chapters.flatMap(c => c.products);
   h += chapters.map(c =>
     `<a href="${esc(H(c.id))}" class="${cur===c.id?'on':''}">${esc(T(c.title))}</a>`
   ).join('');
-  h += `<a href="${esc(H('cases'))}" class="${(PAGE&&PAGE.mode)==='cases'?'on':''}">${esc(T(I18N.nav.cases))}</a>`;
   h += `<a href="${esc(H('appendix'))}" class="${(PAGE&&PAGE.mode)==='appendix'?'on':''}">${esc(T(I18N.nav.appendix))}</a>`;
   document.getElementById('navLinks').innerHTML = h;
 })();
