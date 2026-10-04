@@ -337,6 +337,10 @@ td.n{font-size:.78rem;color:var(--ink-faint);line-height:1.5}
   .cases{grid-template-columns:1fr 1fr}
 }
 </style>
+<style>
+.nav-lang{display:inline-block;padding:0 .45rem;margin-left:.75rem;border-left:1px solid rgba(0,0,0,.12);font-size:.7rem;font-weight:600;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;text-decoration:none;opacity:.7;transition:opacity .2s;font-family:var(--mono,ui-monospace,Menlo,monospace)}
+.nav-lang:hover{opacity:1;color:var(--accent)}
+</style>
 </head>
 <body>
 
@@ -2756,6 +2760,39 @@ if(PAGE && PAGE.pagenav){
   const el = document.getElementById('pagenav');
   if(el) el.outerHTML = PAGE.pagenav;
 }
+</script>
+<script>
+(function(){
+  var path = location.pathname;
+  var file = path.split('/').pop() || 'index.html';
+  var isEs = path.indexOf('/es/') >= 0;
+  var otherFile, otherLang;
+  if (isEs) {
+    otherFile = file;
+    otherLang = 'EN';
+  } else {
+    otherFile = '/es/' + file;
+    otherLang = 'ES';
+  }
+  function inject(){
+    var navLinks = document.getElementById('navLinks');
+    if (!navLinks) return;
+    if (navLinks.querySelector('.nav-lang')) return;
+    var a = document.createElement('a');
+    a.className = 'nav-lang';
+    a.href = otherFile;
+    a.lang = otherLang;
+    a.textContent = otherLang;
+    a.title = isEs ? 'English' : 'Español';
+    a.setAttribute('aria-label', isEs ? 'Switch to English' : 'Cambiar a Español');
+    navLinks.appendChild(a);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inject);
+  } else {
+    inject();
+  }
+})();
 </script>
 </body>
 </html>
