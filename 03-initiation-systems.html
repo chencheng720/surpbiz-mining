@@ -338,9 +338,8 @@ td.n{font-size:.78rem;color:var(--ink-faint);line-height:1.5}
 }
 </style>
 <style>
-.nav-lang{display:inline-block;padding:0 .45rem;margin-left:.75rem;border-left:1px solid rgba(0,0,0,.12);font-size:.7rem;font-weight:600;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;text-decoration:none;opacity:.7;transition:opacity .2s;font-family:var(--mono,ui-monospace,Menlo,monospace);vertical-align:middle}
+.nav-lang{display:inline-block;padding:.3rem .6rem;margin-left:.75rem;border-left:1px solid rgba(0,0,0,.12);font-size:.7rem;font-weight:600;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;text-decoration:none;opacity:.7;transition:opacity .2s;font-family:var(--mono,ui-monospace,Menlo,monospace)}
 .nav-lang:hover{opacity:1;color:var(--accent)}
-.nav-lang-wrap{display:inline-flex;align-items:center;margin-left:.5rem}
 </style>
 </head>
 <body>
@@ -2767,10 +2766,10 @@ if(PAGE && PAGE.pagenav){
   function addLangSwitch(){
     var navLinks = document.getElementById('navLinks');
     if (!navLinks) return false;
-    // Don't add duplicates
     if (navLinks.querySelector('.nav-lang')) return true;
     var path = location.pathname;
     var file = path.split('/').pop() || 'index.html';
+    if (!file) file = 'index.html';
     var isEs = path.indexOf('/es/') >= 0;
     var a = document.createElement('a');
     a.className = 'nav-lang';
@@ -2782,48 +2781,25 @@ if(PAGE && PAGE.pagenav){
     navLinks.appendChild(a);
     return true;
   }
-  function tryAdd(){
-    if (addLangSwitch()) return true;
-    return false;
-  }
-  // Try on DOMContentLoaded
-  function onReady(){
-    // Try a few times to handle v3's async nav population
-    var tries = 0;
-    function attempt(){
-      tries++;
-      if (tryAdd()) return;
-      if (tries < 20) setTimeout(attempt, 100);
-    }
-    attempt();
+  function attempt(){
+    return addLangSwitch();
   }
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', onReady);
+    document.addEventListener('DOMContentLoaded', attempt);
   } else {
-    onReady();
+    attempt();
   }
-  // Also use MutationObserver: if navLinks gets cleared, re-add
-  var observer = new MutationObserver(function(mutations){
-    for (var i = 0; i < mutations.length; i++){
-      var m = mutations[i];
-      // If navLinks children were removed (innerHTML reset)
-      if (m.removedNodes && m.removedNodes.length > 0) {
-        // Wait a tick then re-add
-        setTimeout(tryAdd, 10);
-        break;
-      }
+  // v3.0's IIFE rewrites navLinks.innerHTML after DOMContentLoaded.
+  // Poll for up to 5s to add the link after the rewrite settles.
+  var tries = 0;
+  var interval = setInterval(function(){
+    tries++;
+    if (addLangSwitch()) {
+      clearInterval(interval);
+    } else if (tries > 50) {
+      clearInterval(interval);
     }
-  });
-  // Start observing once navLinks exists
-  function startObserving(){
-    var navLinks = document.getElementById('navLinks');
-    if (navLinks) {
-      observer.observe(navLinks, { childList: true, subtree: false });
-    } else {
-      setTimeout(startObserving, 100);
-    }
-  }
-  startObserving();
+  }, 100);
 })();
 </script>
 </body>
