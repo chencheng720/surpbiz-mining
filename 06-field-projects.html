@@ -338,8 +338,9 @@ td.n{font-size:.78rem;color:var(--ink-faint);line-height:1.5}
 }
 </style>
 <style>
-.nav-lang{display:inline-block;padding:0 .45rem;margin-left:.75rem;border-left:1px solid rgba(0,0,0,.12);font-size:.7rem;font-weight:600;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;text-decoration:none;opacity:.7;transition:opacity .2s;font-family:var(--mono,ui-monospace,Menlo,monospace)}
+.nav-lang{display:inline-block;padding:0 .45rem;margin-left:.75rem;border-left:1px solid rgba(0,0,0,.12);font-size:.7rem;font-weight:600;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;text-decoration:none;opacity:.7;transition:opacity .2s;font-family:var(--mono,ui-monospace,Menlo,monospace);vertical-align:middle}
 .nav-lang:hover{opacity:1;color:var(--accent)}
+.nav-lang-wrap{display:inline-flex;align-items:center;margin-left:.5rem}
 </style>
 </head>
 <body>
@@ -2763,35 +2764,66 @@ if(PAGE && PAGE.pagenav){
 </script>
 <script>
 (function(){
-  var path = location.pathname;
-  var file = path.split('/').pop() || 'index.html';
-  var isEs = path.indexOf('/es/') >= 0;
-  var otherFile, otherLang;
-  if (isEs) {
-    otherFile = file;
-    otherLang = 'EN';
-  } else {
-    otherFile = '/es/' + file;
-    otherLang = 'ES';
-  }
-  function inject(){
+  function addLangSwitch(){
     var navLinks = document.getElementById('navLinks');
-    if (!navLinks) return;
-    if (navLinks.querySelector('.nav-lang')) return;
+    if (!navLinks) return false;
+    // Don't add duplicates
+    if (navLinks.querySelector('.nav-lang')) return true;
+    var path = location.pathname;
+    var file = path.split('/').pop() || 'index.html';
+    var isEs = path.indexOf('/es/') >= 0;
     var a = document.createElement('a');
     a.className = 'nav-lang';
-    a.href = otherFile;
-    a.lang = otherLang;
-    a.textContent = otherLang;
+    a.href = isEs ? file : ('/es/' + file);
+    a.lang = isEs ? 'en' : 'es';
+    a.textContent = isEs ? 'EN' : 'ES';
     a.title = isEs ? 'English' : 'Español';
     a.setAttribute('aria-label', isEs ? 'Switch to English' : 'Cambiar a Español');
     navLinks.appendChild(a);
+    return true;
+  }
+  function tryAdd(){
+    if (addLangSwitch()) return true;
+    return false;
+  }
+  // Try on DOMContentLoaded
+  function onReady(){
+    // Try a few times to handle v3's async nav population
+    var tries = 0;
+    function attempt(){
+      tries++;
+      if (tryAdd()) return;
+      if (tries < 20) setTimeout(attempt, 100);
+    }
+    attempt();
   }
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', inject);
+    document.addEventListener('DOMContentLoaded', onReady);
   } else {
-    inject();
+    onReady();
   }
+  // Also use MutationObserver: if navLinks gets cleared, re-add
+  var observer = new MutationObserver(function(mutations){
+    for (var i = 0; i < mutations.length; i++){
+      var m = mutations[i];
+      // If navLinks children were removed (innerHTML reset)
+      if (m.removedNodes && m.removedNodes.length > 0) {
+        // Wait a tick then re-add
+        setTimeout(tryAdd, 10);
+        break;
+      }
+    }
+  });
+  // Start observing once navLinks exists
+  function startObserving(){
+    var navLinks = document.getElementById('navLinks');
+    if (navLinks) {
+      observer.observe(navLinks, { childList: true, subtree: false });
+    } else {
+      setTimeout(startObserving, 100);
+    }
+  }
+  startObserving();
 })();
 </script>
 </body>
